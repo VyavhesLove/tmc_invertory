@@ -16,7 +16,8 @@
       </div>
       <div>
         <label>Статус:</label>
-        <select v-model="form.status">          
+        <select v-model="form.status">
+          <option disabled value="">Выберите статус</option>          
           <option value="at_work">В работе</option>
           <option value="in_repair">В ремонте</option>
           <option value="issued">Выдано</option>
@@ -28,7 +29,17 @@
       </div>
       <div>
         <label>Ответственный:</label>
-        <input v-model="form.responsible" />
+         <!-- <input v-model="form.responsible" /> -->
+          <select v-model="form.responsible_id" required>
+          <option disabled value="">Выберите пользователя</option>
+          <option
+            v-for="res in responsible_names"
+            :key="res.id"
+            :value="res.id"
+          >
+            {{ res.username }}
+          </option>
+        </select>
       </div>
       <div>
         <label>Локация:</label>
@@ -66,6 +77,7 @@ const form = reactive({
 })
 
 const locations = ref([])
+const responsible_names = ref([])
 const message = ref('')
 
 async function loadLocations() {
@@ -77,10 +89,19 @@ async function loadLocations() {
   }
 }
 
+async function loadResponsibleNames() {
+  try {
+    const res = await api.get('/users')
+    responsible_names.value = res.data
+  } catch (e) {
+    message.value = 'Ошибка загрузки пользователей: ' + (e.response?.data?.detail || e.message)
+  }
+}
+
 async function submitForm() {
   try {
     //const response = await axios.post('/items', form) // базовый URL api должен быть настроен
-    const response = await api.post('/items', form)
+    const response = await api.post('/items/', form)
     message.value = 'ТМЦ успешно создан: ID ' + response.data.id
     // Можно очистить форму, если нужно
     Object.keys(form).forEach(key => form[key] = '')
@@ -94,7 +115,10 @@ function back() {
   window.location.href = 'http://localhost/'
 }
 
-onMounted(loadLocations)
+onMounted(() => {
+  loadLocations()
+  loadResponsibleNames()
+})
 
 </script>
 

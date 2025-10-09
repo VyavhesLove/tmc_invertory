@@ -38,8 +38,14 @@
             </th>
             <th>
               Ответственный
-              <span @click="toggleFilter('responsible')" style="cursor:pointer">🔍</span>
-              <input v-if="showFilters.responsible" v-model="filters.responsible" placeholder="Фильтр..." style="width:100px" @input="resetPage" />
+              <span @click="toggleFilter('responsible_name')" style="cursor:pointer">🔍</span>
+              <input
+                v-if="showFilters.responsible_name"
+                v-model="filters.responsible_name"
+                placeholder="Фильтр..."
+                style="width:100px"
+                @input="resetPage"
+              />
             </th>
             <th>
               Локация
@@ -50,20 +56,19 @@
         </thead>
         <tbody>
           <tr 
-            v-for="it in pagedItems" 
-            :key="it.id"
-            @click="selectItem(it.id)"
-            :class="{ selected: selectedItemId === it.id }"
+            v-for="item in pagedItems" 
+            :key="item.id"
+            @click="selectItem(item.id)"
+            :class="{ selected: selectedItemId === item.id }"
             style="cursor: pointer;"
           >
-            <td>{{ it.id }}</td>
-            <td>{{ it.name }}</td>
-            <td>{{ it.serial_number }}</td>
-            <td>{{ it.brand }}</td>
-            <td>{{ it.status }}</td>
-            <td>{{ it.responsible }}</td>
-            <!-- <td>{{ it.location }}</td> -->
-            <td>{{ it.location || '—' }}</td>
+            <td>{{ item.id }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.serial_number }}</td>
+            <td>{{ item.brand }}</td>
+            <td>{{ item.status }}</td>
+            <td>{{ item.responsible_name || '—' }}</td>
+            <td>{{ item.location_name || '—' }}</td>
           </tr>
           <tr v-if="pagedItems.length === 0">
             <td colspan="7" style="text-align:center;color:gray">Нет данных</td>
@@ -117,11 +122,11 @@ const statusOptions = [
 
 const filters = ref({
   id: '', name: '', serial_number: '', brand: '',
-  status: '', responsible: '', location: ''
+  status: '', responsible_name: '', location: ''
 })
 const showFilters = ref({
   id: false, name: false, serial_number: false, brand: false,
-  status: false, responsible: false, location: false
+  status: false, responsible_name: false, location: false
 })
 function toggleFilter(key) {
   showFilters.value[key] = !showFilters.value[key]
@@ -133,10 +138,29 @@ function resetPage() {
 // Получение списка ТМЦ
 async function fetchItems() {
   try {
-    const res = await api.get('/items')
-    items.value = res.data
+    const res = await api.get('/items/')
+    console.log('API /items response:', res.data)
+
+    // Приводим результат к ожидаемой форме (гарантированно массив)
+    const data = Array.isArray(res.data) ? res.data : []
+    const normalized = data.map(item => ({
+      id: item.id ?? null,
+      name: item.name ?? '',
+      serial_number: item.serial_number ?? '',
+      brand: item.brand ?? '',
+      status: item.status ?? '',
+      responsible_name: item.responsible_name ?? item.responsible ?? '',
+      location_name: item.location_name ?? item.location ?? '',
+      location_id: item.location_id ?? null,
+      comment: item.comment ?? null
+    }))
+
+    items.value = normalized
     page.value = 1
+
+    console.log('Normalized items:', normalized)
   } catch (e) {
+    console.error('fetchItems error', e)
     error.value = e?.response?.data?.detail || e.message
   }
 }
@@ -148,9 +172,10 @@ const filteredItems = computed(() => {
     return Object.entries(filters.value).every(([key, val]) => {
       if (!val) return true;
       if (key === 'status') {
-        return it.status === val;  // строгое совпадение ключей enum
+        return String(it.status ?? '').toLowerCase() === String(val ?? '').toLowerCase();
       }
-      return String(it[key] ?? '').toLowerCase().includes(val.toLowerCase());
+      // прочие фильтры: ищем в нормализованных полях
+      return String(it[key] ?? '').toLowerCase().includes(String(val).toLowerCase());
     });
   });
 });

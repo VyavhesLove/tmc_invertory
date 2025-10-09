@@ -13,43 +13,42 @@ class UserCreate(UserBase):
 
 class UserOut(UserBase):
     id: int
+    username: str
+    model_config = ConfigDict(from_attributes=True)
+
+class UserIsAdmin(UserBase):
+    id: int
+    username: str
     is_admin: bool
     model_config = ConfigDict(from_attributes=True)
 
 
-# === TMC / Inventory ===
-class TMCBase(BaseModel):
+# === Inventory ===
+class ItemBase(BaseModel):
     name: str
     serial_number: Optional[str] = None
     brand: Optional[str] = None
-    type: Optional[str] = None
-    model: Optional[str] = None
-    # location: Optional[str] = None
-    location_id: Optional[int] = None
-
-class TMCCreate(TMCBase):
-    # дополнительные поля для создания можно добавить здесь
-    pass
-
-class TMCUpdate(BaseModel):
-    name: Optional[str] = None
-    serial_number: Optional[str] = None
-    brand: Optional[str] = None
-    type: Optional[str] = None
-    model: Optional[str] = None
     status: Optional[str] = None
     responsible_id: Optional[int] = None
-    # location: Optional[str] = None
     location_id: Optional[int] = None
-    comment: Optional[str] = None
+    # comment: Optional[str] = None
 
-class TMCOut(TMCBase):
+class ItemCreate(ItemBase):
+    """Схема для создания нового ТМЦ"""
+    pass
+
+class ItemUpdate(ItemBase):
+    """Схема для обновления существующего ТМЦ"""
+    pass
+
+class ItemOut(ItemBase):
+    """Выходная схема для отображения ТМЦ в интерфейсе"""
     id: int
-    status: str
-    responsible_id: Optional[int] = None
-    comment: Optional[str] = None
     location_name: Optional[str] = None
-    model_config = ConfigDict(from_attributes=True)
+    responsible_name: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
 # === Locations ===
 class LocationBase(BaseModel):

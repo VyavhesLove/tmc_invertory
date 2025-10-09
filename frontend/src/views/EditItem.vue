@@ -1,6 +1,6 @@
 <template>
   <div class="main-content">
-    <h2>Создать ТМЦ по аналогии</h2>
+    <h2>Редактировать ТМЦ</h2>
     <form @submit.prevent="submitForm">
       <div>
         <label>Название:</label>
@@ -27,11 +27,21 @@
       </div>
       <div>
         <label>Ответственный:</label>
-        <input v-model="form.responsible" />
+        <select v-model="form.responsible_id" required>
+          <option disabled value="">Выберите пользователя</option>
+          <option v-for="res in responsible_names" :key="res.id" :value="res.id">
+            {{ res.username }}
+          </option>
+        </select>
       </div>
       <div>
         <label>Локация:</label>
-        <input v-model="form.location" />
+        <select v-model="form.location_id" required>
+          <option disabled value="">Выберите локацию</option>
+          <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+            {{ loc.location }}
+          </option>
+        </select>
       </div>
       <button type="submit">Записать</button>
     </form>
@@ -50,16 +60,14 @@ const form = reactive({
   serial_number: '',
   brand: '',
   status: '',
-  responsible: '',
-  location: ''
+  responsible_id: null,
+  location_id: null
 })
 
+const responsible_names = ref([])
+const locations = ref([])
 const message = ref('')
 const itemId = ref(null)
-
-const back = () => {
-  window.location.href = 'http://localhost/' // можно заменить на router.push('/')
-}
 
 const statusMap = {
   "В работе": "at_work",
@@ -73,10 +81,33 @@ const statusMap = {
 async function loadItem(id) {
   try {
     const { data } = await api.get(`/items/${id}`)
-    Object.assign(form, data)
+    // Подставим данные формы с учетом новых полей
+    form.name = data.name
+    form.serial_number = data.serial_number
+    form.brand = data.brand
     form.status = statusMap[data.status] || 'confirm'
+    form.responsible_id = data.responsible_id
+    form.location_id = data.location_id
   } catch (e) {
     message.value = 'Ошибка загрузки: ' + (e.response?.data?.detail || e.message)
+  }
+}
+
+async function loadLocations() {
+  try {
+    const res = await api.get('/locations')
+    locations.value = res.data
+  } catch (e) {
+    message.value = 'Ошибка загрузки локаций: ' + (e.response?.data?.detail || e.message)
+  }
+}
+
+async function loadResponsibleNames() {
+  try {
+    const res = await api.get('/users')
+    responsible_names.value = res.data
+  } catch (e) {
+    message.value = 'Ошибка загрузки пользователей: ' + (e.response?.data?.detail || e.message)
   }
 }
 
@@ -93,7 +124,13 @@ async function submitForm() {
   }
 }
 
-onMounted(() => {
+const back = () => {
+  window.location.href = 'http://localhost/' // можно заменить на router.push('/')
+}
+
+onMounted(async () => {
+  await loadLocations()
+  await loadResponsibleNames()
   const savedId = localStorage.getItem('selectedItemId')
   if (savedId) {
     itemId.value = savedId

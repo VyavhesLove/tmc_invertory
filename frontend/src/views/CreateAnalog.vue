@@ -109,11 +109,10 @@ async function loadItem(id) {
 
 async function submitForm() {
   try {
-    //const response = await axios.post('/items', form) // базовый URL api должен быть настроен
     const response = await api.post('/items/', form)
     message.value = 'ТМЦ успешно создан: ID ' + response.data.id
     // Можно очистить форму, если нужно
-    Object.keys(form).forEach(key => form[key] = '')
+    // Object.keys(form).forEach(key => form[key] = '')
   } catch (e) {
     message.value = 'Ошибка при создании: ' + (e.response?.data?.detail || e.message)
   }

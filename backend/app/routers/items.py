@@ -37,29 +37,29 @@ def list_items(
 
     # Собираем данные вручную (лучше, чем ORM.join для dev)
     result = []
-    for it in items:
+    for item in items:
         responsible_name = (
             db.query(models.User.username)
-            .filter(models.User.id == it.responsible_id)
+            .filter(models.User.id == item.responsible_id)
             .scalar()
         )
         location_name = (
             db.query(models.Location.name)
-            .filter(models.Location.id == it.location_id)
+            .filter(models.Location.id == item.location_id)
             .scalar()
         )
 
         result.append({
-            "id": it.id,
-            "name": it.name,
-            "serial_number": it.serial_number,
-            "brand": it.brand,
-            "status": it.status,
-            "responsible_id": it.responsible_id,
+            "id": item.id,
+            "name": item.name,
+            "serial_number": item.serial_number,
+            "brand": item.brand,
+            "status": item.status,
+            "responsible_id": item.responsible_id,
             "responsible_name": responsible_name or "",
-            "location_id": it.location_id,
+            "location_id": item.location_id,
             "location_name": location_name or "",
-            "comment": getattr(it, "comment", None),
+            "comment": getattr(item, "comment", None),
         })
 
     return result
@@ -93,7 +93,7 @@ def get_item(item_id: int, db: Session = Depends(get_db), current_user: User = D
         "responsible_name": responsible_name,
         "location_id": item.location_id,
         "location": location_name,
-        "comment": item.comment,
+        "comment": getattr(item, "comment", None),
     }
 
 

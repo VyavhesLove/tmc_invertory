@@ -28,11 +28,21 @@
       </div>
       <div>
         <label>Ответственный:</label>
-        <input v-model="form.responsible" />
+        <select v-model="form.responsible_id" required>
+          <option disabled value="">Выберите пользователя</option>
+          <option v-for="res in responsible_names" :key="res.id" :value="res.id">
+            {{ res.username }}
+          </option>
+        </select>
       </div>
       <div>
         <label>Локация:</label>
-        <input v-model="form.location" />
+        <select v-model="form.location_id" required>
+          <option disabled value="">Выберите локацию</option>
+          <option v-for="loc in locations" :key="loc.id" :value="loc.id">
+            {{ loc.location }}
+          </option>
+        </select>
       </div>
       <button type="submit">Создать</button>
     </form>
@@ -52,10 +62,12 @@ const form = reactive({
   serial_number: '',
   brand: '',
   status: '',
-  responsible: '',
-  location: ''
+  responsible_id: null,
+  location_id: null
 })
 
+const responsible_names = ref([])
+const locations = ref([])
 const message = ref('')
 const itemId = ref(null)
 const statusMap = {
@@ -65,6 +77,24 @@ const statusMap = {
   "Доступно": "available",
   "Подтвердить ТМЦ": "confirm",
   "Подтвердить ремонт": "confirm_repair"
+}
+
+async function loadLocations() {
+  try {
+    const res = await api.get('/locations')
+    locations.value = res.data
+  } catch (e) {
+    message.value = 'Ошибка загрузки локаций: ' + (e.response?.data?.detail || e.message)
+  }
+}
+
+async function loadResponsibleNames() {
+  try {
+    const res = await api.get('/users')
+    responsible_names.value = res.data
+  } catch (e) {
+    message.value = 'Ошибка загрузки пользователей: ' + (e.response?.data?.detail || e.message)
+  }
 }
 
 async function loadItem(id) {
@@ -80,7 +110,7 @@ async function loadItem(id) {
 async function submitForm() {
   try {
     //const response = await axios.post('/items', form) // базовый URL api должен быть настроен
-    const response = await api.post('/items', form)
+    const response = await api.post('/items/', form)
     message.value = 'ТМЦ успешно создан: ID ' + response.data.id
     // Можно очистить форму, если нужно
     Object.keys(form).forEach(key => form[key] = '')
@@ -95,6 +125,8 @@ onMounted(() => {
     itemId.value = savedId
     loadItem(savedId)
   }
+  loadLocations()
+  loadResponsibleNames()
 })
 
 // Функция возврата, редирект на http://localhost/

@@ -1,0 +1,185 @@
+<template>
+  <div class="app-container">
+    <Sidebar />
+    <div class="main-content">
+      <h2>Список ТМЦ</h2>
+      <button @click="fetchItems">Обновить</button>
+      <p v-if="error" style="color:red">{{ error }}</p>
+      <table border="1" cellpadding="4">
+        <thead>
+          <tr>
+            <th>
+              №
+              <span @click="toggleFilter('id')" style="cursor:pointer">🔍</span>
+              <input v-if="showFilters.id" v-model="filters.id" placeholder="Фильтр..." style="width:70px" @input="resetPage" />
+            </th>
+            <th>
+              Название
+              <span @click="toggleFilter('name')" style="cursor:pointer">🔍</span>
+              <input v-if="showFilters.name" v-model="filters.name" placeholder="Фильтр..." style="width:100px" @input="resetPage" />
+            </th>
+            <th>
+              Серийный номер
+              <span @click="toggleFilter('serial_number')" style="cursor:pointer">🔍</span>
+              <input v-if="showFilters.serial_number" v-model="filters.serial_number" placeholder="Фильтр..." style="width:100px" @input="resetPage" />
+            </th>
+            <th>
+              Бренд
+              <span @click="toggleFilter('brand')" style="cursor:pointer">🔍</span>
+              <input v-if="showFilters.brand" v-model="filters.brand" placeholder="Фильтр..." style="width:100px" @input="resetPage" />
+            </th>
+            <th>
+              Статус
+              <span @click="toggleFilter('status')" style="cursor:pointer">🔍</span>
+              <select v-if="showFilters.status" v-model="filters.status" @change="resetPage">
+                <option value="">-- Все --</option>
+                <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+              </select>
+            </th>
+            <th>
+              Ответственный
+              <span @click="toggleFilter('responsible')" style="cursor:pointer">🔍</span>
+              <input v-if="showFilters.responsible" v-model="filters.responsible" placeholder="Фильтр..." style="width:100px" @input="resetPage" />
+            </th>
+            <th>
+              Локация
+              <span @click="toggleFilter('location')" style="cursor:pointer">🔍</span>
+              <input v-if="showFilters.location" v-model="filters.location" placeholder="Фильтр..." style="width:100px" @input="resetPage" />
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr 
+            v-for="it in pagedItems" 
+            :key="it.id"
+            @click="selectItem(it.id)"
+            :class="{ selected: selectedItemId === it.id }"
+            style="cursor: pointer;"
+          >
+            <td>{{ it.id }}</td>
+            <td>{{ it.name }}</td>
+            <td>{{ it.serial_number }}</td>
+            <td>{{ it.brand }}</td>
+            <td>{{ it.status }}</td>
+            <td>{{ it.responsible }}</td>
+            <!-- <td>{{ it.location }}</td> -->
+            <td>{{ it.location || '—' }}</td>
+          </tr>
+          <tr v-if="pagedItems.length === 0">
+            <td colspan="7" style="text-align:center;color:gray">Нет данных</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px;">
+        Кол-во на странице:
+        <select v-model.number="perPage">
+          <option v-for="n in [5,10,25,50,100]" :key="n" :value="n">{{ n }}</option>
+        </select>
+        <button :disabled="page === 1" @click="prevPage">Назад</button>
+        Страница {{ page }} из {{ pageCount }}
+        <button :disabled="page === pageCount" @click="nextPage">Вперёд</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, watch } from 'vue'
+import api from '../api/axios'
+import Sidebar from './layout/Sidebar.vue'
+
+const items = ref([])
+const error = ref(null)
+const page = ref(1)
+const perPage = ref(10)
+
+// Восстановление выбранного ID из localStorage (если есть)
+const selectedItemId = ref(localStorage.getItem('selectedItemId') ? Number(localStorage.getItem('selectedItemId')) : null)
+
+// Фильтры по столбцам
+
+// at_work В работе
+// in_repair В ремонте
+// issued Выдано
+// available Доступно
+// confirm Подтвердить ТМЦ
+// confirm_repair Подтвердить ремонт
+
+const statusOptions = [
+  { label: 'В работе', value: 'В работе' }, // at_work
+  { label: 'В ремонте', value: 'В ремонте' }, // in_repair
+  { label: 'Выдано', value: 'Выдано' }, // issued
+  { label: 'Доступно', value: 'Доступно' }, // available
+  { label: 'Подтвердить ТМЦ', value: 'Подтвердить ТМЦ' }, // confirm
+  { label: 'Подтвердить ремонт', value: 'Подтвердить ремонт' }, // confirm_repair
+  { label: 'Доступно', value: 'Доступно' } // available
+]
+
+const filters = ref({
+  id: '', name: '', serial_number: '', brand: '',
+  status: '', responsible: '', location: ''
+})
+const showFilters = ref({
+  id: false, name: false, serial_number: false, brand: false,
+  status: false, responsible: false, location: false
+})
+function toggleFilter(key) {
+  showFilters.value[key] = !showFilters.value[key]
+}
+function resetPage() {
+  page.value = 1
+}
+
+// Получение списка ТМЦ
+async function fetchItems() {
+  try {
+    const res = await api.get('/items')
+    items.value = res.data
+    page.value = 1
+  } catch (e) {
+    error.value = e?.response?.data?.detail || e.message
+  }
+}
+fetchItems()
+
+// Компьютед для фильтрации по каждому столбцу
+const filteredItems = computed(() => {
+  return items.value.filter(it => {
+    return Object.entries(filters.value).every(([key, val]) => {
+      if (!val) return true;
+      if (key === 'status') {
+        return it.status === val;  // строгое совпадение ключей enum
+      }
+      return String(it[key] ?? '').toLowerCase().includes(val.toLowerCase());
+    });
+  });
+});
+
+// Пагинация
+const pageCount = computed(() =>
+  Math.max(1, Math.ceil(filteredItems.value.length / perPage.value))
+)
+const pagedItems = computed(() => {
+  const start = (page.value - 1) * perPage.value
+  return filteredItems.value.slice(start, start + perPage.value)
+})
+function prevPage() {
+  if (page.value > 1) page.value--
+}
+function nextPage() {
+  if (page.value < pageCount.value) page.value++
+}
+watch([perPage], resetPage)
+
+// Функция выбора элемента - запоминает id и сохраняет в localStorage
+function selectItem(id) {
+  selectedItemId.value = id
+  localStorage.setItem('selectedItemId', id)
+}
+</script>
+
+<style scoped>
+.selected {
+  background-color: #80c1ff;
+}
+</style>

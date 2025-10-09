@@ -1,0 +1,4 @@
+db_password.txt
+jwt_secret.txt
+pepper.txt
+.env

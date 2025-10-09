@@ -33,3 +33,31 @@
     # db.commit()
     # db.refresh(new_item)
     # return new_item
+
+@app.put("/api/tmc/{tmc_id}/edit", response_model=schemas.TMCOut)
+def edit_tmc_item(tmc_id: int, tmc_in: schemas.TMCUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    obj = crud.update_tmc(db, tmc_id, tmc_in)
+    if not obj:
+        raise HTTPException(status_code=404, detail="TMC not found")
+    return obj
+
+@app.post("/api/tmc/{tmc_id}/transfer", response_model=schemas.TMCOut)
+def transfer_tmc_item(tmc_id: int, new_responsible_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    obj = crud.transfer_tmc(db, tmc_id, new_responsible_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="TMC not found")
+    return obj
+
+@app.post("/api/tmc/{tmc_id}/send_to_service", response_model=schemas.TMCOut)
+def send_tmc_to_service(tmc_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    obj = crud.send_to_service(db, tmc_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="TMC not found")
+    return obj
+
+@app.post("/api/tmc/{tmc_id}/return_from_service", response_model=schemas.TMCOut)
+def return_tmc_from_service(tmc_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    obj = crud.return_from_service(db, tmc_id)
+    if not obj:
+        raise HTTPException(status_code=404, detail="TMC not found")
+    return obj

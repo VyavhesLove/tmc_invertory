@@ -28,6 +28,9 @@ app = FastAPI(
     openapi_url="/openapi.json"  # JSON-схема
 )
 
+from .routers import items
+app.include_router(items.router)
+
 # 02.10.2025 start
 origins = ["http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:5173"]
 
@@ -84,138 +87,6 @@ def register_user(
     hashed = hash_password(new_user.password)
     db_user = crud.create_user(db, new_user, hashed)
     return db_user
-
-@app.get(
-    "/items",
-    response_model=list[schemas.InventoryItemOut],
-    tags=["inventory"],
-    summary="Получить список ТМЦ с ответственными",
-)
-def list_items(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    items = (
-        db.query(
-            models.InventoryItem.id,
-            models.InventoryItem.name,
-            models.InventoryItem.serial_number,
-            models.InventoryItem.brand,
-            models.InventoryItem.status,
-            models.InventoryItem.location_id,
-            models.InventoryItem.location,
-            models.User.username.label("responsible_name")
-        )
-        .outerjoin(models.User, models.InventoryItem.responsible_id == models.User.id)
-        .all()
-    )
-
-    return [
-        {
-            "id": i.id,
-            "name": i.name,
-            "serial_number": i.serial_number,
-            "brand": i.brand,
-            "status": i.status,
-            "location_id": i.location_id,
-            "location": i.location,
-            "responsible_name": i.responsible_name,
-        }
-        for i in items
-    ]
-
-@app.get("/items/{item_id}")
-def get_item(
-    item_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
-    # Можно добавить проверку прав пользователя к объекту (если нужно)
-    return item
-
-@app.post("/items")
-def add_item(
-    item: dict,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    location_obj = None
-    if item.get("location_id"):
-        location_obj = db.query(models.Location).filter(models.Location.id == item["location_id"]).first()
-        if not location_obj:
-            raise HTTPException(status_code=400, detail="Указанная локация не найдена")
-
-    new_item = models.InventoryItem(
-        name=item.get("name"),
-        serial_number=item.get("serial_number"),
-        brand=item.get("brand"),
-        status=item.get("status", "Подтвердить ТМЦ"),
-        responsible=item.get("responsible"),
-        location_id=item.get("location_id"),
-        location=location_obj.name if location_obj else None,
-    )
-
-    db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
-    return new_item
-
-
-@app.put("/items/{item_id}")
-def update_item(
-    item_id: int,
-    item_data: schemas.TMCUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
-
-    for key, value in item_data.dict(exclude_unset=True).items():
-        setattr(item, key, value)
-    db.commit()
-    db.refresh(item)
-    return item
-
-
-@app.delete("/items/{item_id}")
-def delete_item(item_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    db_item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
-    if not db_item:
-        raise HTTPException(status_code=404, detail="Item not found")
-
-    db.delete(db_item)
-    db.commit()
-    return {"message": "Item deleted"}
-
-@app.put("/api/tmc/{tmc_id}/edit", response_model=schemas.TMCOut)
-def edit_tmc_item(tmc_id: int, tmc_in: schemas.TMCUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    obj = crud.update_tmc(db, tmc_id, tmc_in)
-    if not obj:
-        raise HTTPException(status_code=404, detail="TMC not found")
-    return obj
-
-@app.post("/api/tmc/{tmc_id}/transfer", response_model=schemas.TMCOut)
-def transfer_tmc_item(tmc_id: int, new_responsible_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    obj = crud.transfer_tmc(db, tmc_id, new_responsible_id)
-    if not obj:
-        raise HTTPException(status_code=404, detail="TMC not found")
-    return obj
-
-@app.post("/api/tmc/{tmc_id}/send_to_service", response_model=schemas.TMCOut)
-def send_tmc_to_service(tmc_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    obj = crud.send_to_service(db, tmc_id)
-    if not obj:
-        raise HTTPException(status_code=404, detail="TMC not found")
-    return obj
-
-@app.post("/api/tmc/{tmc_id}/return_from_service", response_model=schemas.TMCOut)
-def return_tmc_from_service(tmc_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    obj = crud.return_from_service(db, tmc_id)
-    if not obj:
-        raise HTTPException(status_code=404, detail="TMC not found")
-    return obj
 
 @app.get("/locations", response_model=list[schemas.LocationOut])
 def list_locations(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

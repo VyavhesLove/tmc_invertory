@@ -138,10 +138,29 @@ function resetPage() {
 // Получение списка ТМЦ
 async function fetchItems() {
   try {
-    const res = await api.get('/items')
-    items.value = res.data
+    const res = await api.get('/items/')
+    console.log('API /items response:', res.data)
+
+    // Приводим результат к ожидаемой форме (гарантированно массив)
+    const data = Array.isArray(res.data) ? res.data : []
+    const normalized = data.map(it => ({
+      id: it.id ?? null,
+      name: it.name ?? '',
+      serial_number: it.serial_number ?? '',
+      brand: it.brand ?? '',
+      status: it.status ?? '',
+      responsible: it.responsible_name ?? '',
+      location: it.location_name ?? '',
+      location_id: it.location_id ?? null,
+      comment: it.comment ?? null
+    }))
+
+    items.value = normalized
     page.value = 1
+
+    console.log('Normalized items:', normalized)
   } catch (e) {
+    console.error('fetchItems error', e)
     error.value = e?.response?.data?.detail || e.message
   }
 }
@@ -153,9 +172,10 @@ const filteredItems = computed(() => {
     return Object.entries(filters.value).every(([key, val]) => {
       if (!val) return true;
       if (key === 'status') {
-        return it.status === val;  // строгое совпадение для статуса
+        return String(it.status ?? '').toLowerCase() === String(val ?? '').toLowerCase();
       }
-      return String(it[key] ?? '').toLowerCase().includes(val.toLowerCase());
+      // прочие фильтры: ищем в нормализованных полях
+      return String(it[key] ?? '').toLowerCase().includes(String(val).toLowerCase());
     });
   });
 });

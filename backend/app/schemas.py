@@ -51,6 +51,18 @@ class TMCOut(TMCBase):
     location_name: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
+class InventoryItemOut(BaseModel):
+    id: int
+    name: str
+    serial_number: Optional[str] = None
+    brand: Optional[str] = None
+    status: Optional[str] = None
+    location_id: Optional[int] = None
+    location: Optional[str] = None
+    responsible_name: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
 # === Locations ===
 class LocationBase(BaseModel):
     location: str

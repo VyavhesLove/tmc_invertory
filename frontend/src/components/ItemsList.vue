@@ -38,8 +38,14 @@
             </th>
             <th>
               Ответственный
-              <span @click="toggleFilter('responsible')" style="cursor:pointer">🔍</span>
-              <input v-if="showFilters.responsible" v-model="filters.responsible" placeholder="Фильтр..." style="width:100px" @input="resetPage" />
+              <span @click="toggleFilter('responsible_name')" style="cursor:pointer">🔍</span>
+              <input
+                v-if="showFilters.responsible_name"
+                v-model="filters.responsible_name"
+                placeholder="Фильтр..."
+                style="width:100px"
+                @input="resetPage"
+              />
             </th>
             <th>
               Локация
@@ -50,20 +56,19 @@
         </thead>
         <tbody>
           <tr 
-            v-for="it in pagedItems" 
-            :key="it.id"
-            @click="selectItem(it.id)"
-            :class="{ selected: selectedItemId === it.id }"
+            v-for="item in pagedItems" 
+            :key="item.id"
+            @click="selectItem(item.id)"
+            :class="{ selected: selectedItemId === item.id }"
             style="cursor: pointer;"
           >
-            <td>{{ it.id }}</td>
-            <td>{{ it.name }}</td>
-            <td>{{ it.serial_number }}</td>
-            <td>{{ it.brand }}</td>
-            <td>{{ it.status }}</td>
-            <td>{{ it.responsible }}</td>
-            <!-- <td>{{ it.location }}</td> -->
-            <td>{{ it.location || '—' }}</td>
+            <td>{{ item.id }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.serial_number }}</td>
+            <td>{{ item.brand }}</td>
+            <td>{{ item.status }}</td>
+            <td>{{ item.responsible_name || '—' }}</td>
+            <td>{{ item.location || '—' }}</td>
           </tr>
           <tr v-if="pagedItems.length === 0">
             <td colspan="7" style="text-align:center;color:gray">Нет данных</td>
@@ -117,11 +122,11 @@ const statusOptions = [
 
 const filters = ref({
   id: '', name: '', serial_number: '', brand: '',
-  status: '', responsible: '', location: ''
+  status: '', responsible_name: '', location: ''
 })
 const showFilters = ref({
   id: false, name: false, serial_number: false, brand: false,
-  status: false, responsible: false, location: false
+  status: false, responsible_name: false, location: false
 })
 function toggleFilter(key) {
   showFilters.value[key] = !showFilters.value[key]
@@ -148,7 +153,7 @@ const filteredItems = computed(() => {
     return Object.entries(filters.value).every(([key, val]) => {
       if (!val) return true;
       if (key === 'status') {
-        return it.status === val;  // строгое совпадение ключей enum
+        return it.status === val;  // строгое совпадение для статуса
       }
       return String(it[key] ?? '').toLowerCase().includes(val.toLowerCase());
     });

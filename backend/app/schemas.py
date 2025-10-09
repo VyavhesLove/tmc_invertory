@@ -13,6 +13,12 @@ class UserCreate(UserBase):
 
 class UserOut(UserBase):
     id: int
+    username: str
+    model_config = ConfigDict(from_attributes=True)
+
+class UserIsAdmin(UserBase):
+    id: int
+    username: str
     is_admin: bool
     model_config = ConfigDict(from_attributes=True)
 
@@ -25,7 +31,7 @@ class ItemBase(BaseModel):
     status: Optional[str] = None
     responsible_id: Optional[int] = None
     location_id: Optional[int] = None
-    comment: Optional[str] = None
+    # comment: Optional[str] = None
 
 class ItemCreate(ItemBase):
     """Схема для создания нового ТМЦ"""

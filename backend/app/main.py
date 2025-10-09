@@ -93,3 +93,9 @@ def list_locations(db: Session = Depends(get_db), current_user: User = Depends(g
     locations = db.query(models.Location).all()
     # преобразуем Enum → строка
     return [{"id": loc.id, "location": loc.name} for loc in locations]
+
+@app.get("/users", response_model=list[schemas.UserOut])
+def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    users = db.query(models.User).all()
+    # преобразуем Enum → строка
+    return [{"id": user.id, "username": user.username} for user in users]

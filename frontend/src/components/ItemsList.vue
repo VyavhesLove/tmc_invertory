@@ -68,7 +68,7 @@
             <td>{{ item.brand }}</td>
             <td>{{ item.status }}</td>
             <td>{{ item.responsible_name || '—' }}</td>
-            <td>{{ item.location || '—' }}</td>
+            <td>{{ item.location_name || '—' }}</td>
           </tr>
           <tr v-if="pagedItems.length === 0">
             <td colspan="7" style="text-align:center;color:gray">Нет данных</td>
@@ -143,16 +143,16 @@ async function fetchItems() {
 
     // Приводим результат к ожидаемой форме (гарантированно массив)
     const data = Array.isArray(res.data) ? res.data : []
-    const normalized = data.map(it => ({
-      id: it.id ?? null,
-      name: it.name ?? '',
-      serial_number: it.serial_number ?? '',
-      brand: it.brand ?? '',
-      status: it.status ?? '',
-      responsible: it.responsible_name ?? '',
-      location: it.location_name ?? '',
-      location_id: it.location_id ?? null,
-      comment: it.comment ?? null
+    const normalized = data.map(item => ({
+      id: item.id ?? null,
+      name: item.name ?? '',
+      serial_number: item.serial_number ?? '',
+      brand: item.brand ?? '',
+      status: item.status ?? '',
+      responsible_name: item.responsible_name ?? item.responsible ?? '',
+      location_name: item.location_name ?? item.location ?? '',
+      location_id: item.location_id ?? null,
+      comment: item.comment ?? null
     }))
 
     items.value = normalized

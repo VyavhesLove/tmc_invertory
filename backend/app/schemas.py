@@ -38,7 +38,7 @@ class ItemUpdate(ItemBase):
 class ItemOut(ItemBase):
     """Выходная схема для отображения ТМЦ в интерфейсе"""
     id: int
-    location: Optional[str] = None
+    location_name: Optional[str] = None
     responsible_name: Optional[str] = None
 
     class Config:

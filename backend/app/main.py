@@ -74,10 +74,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 @app.post("/auth/register", tags=["Auth"], response_model=schemas.UserOut)
 def register_user(
     new_user: schemas.UserCreate,
+    admin: schemas.UserIsAdmin,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    if not current_user.is_admin:
+    if not admin.is_admin:
         raise HTTPException(status_code=403, detail="Недостаточно прав")
 
     existing = crud.get_user_by_username(db, new_user.username)
@@ -99,3 +100,7 @@ def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_c
     users = db.query(models.User).all()
     # преобразуем Enum → строка
     return [{"id": user.id, "username": user.username} for user in users]
+
+@app.get("/users/IsAdmin", response_model=schemas.UserIsAdmin)
+def get_is_admin(current_user: User = Depends(get_current_user)):
+    return {"is_admin": current_user.is_admin}

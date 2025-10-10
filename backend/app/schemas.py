@@ -46,6 +46,7 @@ class ItemOut(ItemBase):
 
     class Config:
         orm_mode = True
+        from_attributes = True
 
 # === Locations ===
 class LocationBase(BaseModel):

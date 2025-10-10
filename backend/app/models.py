@@ -30,7 +30,7 @@ class InventoryItem(Base):
     location_id = Column(Integer, ForeignKey("locations.id"), nullable=True)
 
     # --- Человеко-читаемое название локации ---
-    location = Column(String, nullable=True)
+    # location = Column(String, nullable=True)
 
     # --- Relationships ---
     responsible = relationship("User", back_populates="inventory_items")

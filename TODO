@@ -14,6 +14,8 @@ CRUD-эндпоинты должны возвращать схемы (response_m
 Сделать:
 def add_item(item: schemas.TMCCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
 
+/locations → в routers/locations.py
+
 Frontend
 
 Централизовать API-вызовы

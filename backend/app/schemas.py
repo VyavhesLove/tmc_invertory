@@ -60,3 +60,17 @@ class LocationOut(LocationBase):
     location: str
 
     model_config = ConfigDict(from_attributes=True)
+
+# === Statuses ===
+class StatusBase(BaseModel):
+    status: str
+    
+class StatusCreate(StatusBase):
+    pass
+    # здесь можно добавить поля для создания, если нужно
+    
+class StatusOut(StatusBase):
+    id: int
+    status: str
+    
+    model_config = ConfigDict(from_attributes=True)

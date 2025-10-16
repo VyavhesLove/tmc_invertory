@@ -1,6 +1,7 @@
 <template>
   <div class="main-content">
     <h2>Редактировать ТМЦ</h2>
+
     <form @submit.prevent="submitForm">
       <!-- Название -->
       <div>
@@ -20,12 +21,15 @@
         <input v-model="form.brand" />
       </div>
 
-      <!-- Нередактируемые поля -->
+      <!-- Остальные поля — только для просмотра -->
       <div>
         <label>Статус:</label>
-        <input :value="item.status" disabled />
+        <input
+          :value="item.status_name"
+          disabled
+        />
       </div>
-
+      
       <div>
         <label>Ответственный:</label>
         <input :value="item.responsible_name" disabled />
@@ -41,7 +45,6 @@
 
     <p v-if="message">{{ message }}</p>
 
-    <!-- Кнопка возврата -->
     <button @click="back" class="logout-button mt-2">⬅ Вернуться к списку ТМЦ</button>
   </div>
 </template>
@@ -53,26 +56,45 @@ import api from '@/api/axios'
 const form = reactive({
   name: '',
   serial_number: '',
-  brand: ''
+  brand: '',
+  status_id: null
 })
 
 const item = reactive({
-  status: '',
   responsible_name: '',
-  location_name: ''
+  location_name: '',
+  status_name: ''
 })
 
+const statuses = ref([])     // ✅ список статусов
 const message = ref('')
 const itemId = ref(null)
 
-// Загрузка данных ТМЦ по ID
+// -----------------------------
+// Загрузка всех статусов
+// -----------------------------
+async function loadStatuses() {
+  try {
+    const res = await api.get('/statuses')
+    statuses.value = res.data
+    console.log('📦 Загружены статусы:', statuses.value)
+  } catch (e) {
+    message.value = 'Ошибка загрузки статусов: ' + (e.response?.data?.detail || e.message)
+  }
+}
+
+// -----------------------------
+// Загрузка карточки ТМЦ
+// -----------------------------
 async function loadItem(id) {
   try {
     const { data } = await api.get(`/items/${id}`)
+    console.log('📦 Загружен ТМЦ:', data)
+
     form.name = data.name
     form.serial_number = data.serial_number
     form.brand = data.brand
-    item.status = data.status
+    item.status_name = data.status_name || data.status || '—'
     item.responsible_name = data.responsible_name
     item.location_name = data.location_name
   } catch (e) {
@@ -80,7 +102,9 @@ async function loadItem(id) {
   }
 }
 
-// Отправка обновления
+// -----------------------------
+// Сохранение изменений
+// -----------------------------
 async function submitForm() {
   try {
     if (!itemId.value) {
@@ -91,7 +115,8 @@ async function submitForm() {
     const payload = {
       name: form.name,
       serial_number: form.serial_number,
-      brand: form.brand
+      brand: form.brand,
+      status_id: form.status_id // ✅ теперь отправляем ID статуса
     }
 
     const { data } = await api.put(`/items/${itemId.value}`, payload)
@@ -101,13 +126,18 @@ async function submitForm() {
   }
 }
 
-// Возврат к списку
+// -----------------------------
+// Кнопка "Назад"
+// -----------------------------
 const back = () => {
-  window.location.href = 'http://localhost/' // можно заменить на router.push('/')
+  window.location.href = 'http://localhost/'
 }
 
-// При монтировании — загрузить данные
+// -----------------------------
+// Инициализация
+// -----------------------------
 onMounted(async () => {
+  await loadStatuses() // ✅ сначала статусы
   const savedId = localStorage.getItem('selectedItemId')
   if (savedId) {
     itemId.value = savedId
@@ -124,7 +154,7 @@ label {
   display: inline-block;
   width: 120px;
 }
-input {
+input, select {
   padding: 5px;
   width: 200px;
 }

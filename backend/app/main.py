@@ -49,7 +49,7 @@ def on_startup():
     # Создадим дефолтного пользователя (admin:admin), если БД пуста
     db = SessionLocal()
     if not db.query(User).first():
-        user = User(username="admin", hashed_password=get_password_hash("admin"))
+        user = User(username="admin", hashed_password=hash_password("admin"))
         db.add(user)
         db.commit()
     db.close()

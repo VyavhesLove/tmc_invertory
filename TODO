@@ -1,0 +1,40 @@
+не работает кнопка сены темы в свернутом состоянии сайдбара 
+сделать автоматическую миграцию для создания и заполнения таблицы locations
+доработать бэкенд, чтобы он автоматически подставлял location по location_id, чтобы тебе не приходилось хранить строку в двух местах?
+
+Добавить ConfigDict(from_attributes=True) во все Out-модели
+Чтобы FastAPI мог сериализовать SQLAlchemy-модели в JSON без ошибок.
+
+CRUD-эндпоинты должны возвращать схемы (response_model)
+Сейчас многие возвращают чистые SQL-модели → могут утечь поля (например, hashed_password).
+казать response_model=schemas.TMCOut и response_model_exclude_none=True.
+
+Валидировать входящие данные
+Сейчас /items принимает item: dict — это плохо.
+Сделать:
+def add_item(item: schemas.TMCCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+
+/locations → в routers/locations.py
+
+Frontend
+
+Централизовать API-вызовы
+В /src/api/axios.js создать helper:
+export const getItems = () => api.get('/items')
+export const createItem = (data) => api.post('/items', data)
+export const getLocations = () => api.get('/locations')
+
+Загрузку локаций делать через onMounted
+onMounted(async () => {
+  const res = await getLocations()
+  locations.value = res.data
+})
+
+Добавить состояние загрузки и ошибки
+Показывать Загрузка... или Ошибка: ... во время запросов.
+
+Сделать компонент SelectLocation.vue
+Чтобы выбор локации можно было переиспользовать в других формах (создание, редактирование).
+
+
+Использовать Django только как источник данных (admin + ORM)

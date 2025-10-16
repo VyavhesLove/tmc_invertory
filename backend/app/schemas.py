@@ -25,7 +25,7 @@ class ItemBase(BaseModel):
     name: str
     serial_number: Optional[str] = None
     brand: Optional[str] = None
-    status: Optional[str] = None
+    status_id: Optional[int] = None
     responsible_id: Optional[int] = None
     location_id: Optional[int] = None
     # comment: Optional[str] = None
@@ -43,6 +43,7 @@ class ItemOut(ItemBase):
     id: int
     location_name: Optional[str] = None
     responsible_name: Optional[str] = None
+    status_name: Optional[str] = None
 
     class Config:
         orm_mode = True
@@ -59,4 +60,18 @@ class LocationOut(LocationBase):
     id: int
     location: str
 
+    model_config = ConfigDict(from_attributes=True)
+
+# === Statuses ===
+class StatusBase(BaseModel):
+    status: str
+    
+class StatusCreate(StatusBase):
+    pass
+    # здесь можно добавить поля для создания, если нужно
+    
+class StatusOut(StatusBase):
+    id: int
+    status: str
+    
     model_config = ConfigDict(from_attributes=True)

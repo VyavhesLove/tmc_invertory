@@ -4,16 +4,16 @@ from .database import Base
 import enum
 
 
-class TMCStatus(str, enum.Enum):
-    at_work = "В работе"
-    in_repair = "В ремонте"
-    issued = "Выдано"
-    available = "Доступно"
-    confirm = "Подтвердить ТМЦ"
-    confirm_repair = "Подтвердить ремонт"
+class ItemStatus(Base):
+    __tablename__ = "item_status"
+
+    id = Column(Integer, primary_key=True, index=True)
+    status = Column(String, unique=True, nullable=False)
+
+    # связь с InventoryItem
+    inventory_items = relationship("InventoryItem", back_populates="status_obj")
 
 
-# === DEV MODEL: InventoryItem ===
 class InventoryItem(Base):
     __tablename__ = "inventory_items"
 
@@ -21,20 +21,13 @@ class InventoryItem(Base):
     name = Column(String, nullable=False)
     serial_number = Column(String, unique=True, nullable=True)
     brand = Column(String, nullable=True)
-    status = Column(Enum(TMCStatus), default=TMCStatus.confirm)
+    status_id = Column(Integer, ForeignKey("item_status.id"))
+    responsible_id = Column(Integer, ForeignKey("users.id"))
+    location_id = Column(Integer, ForeignKey("locations.id"))
 
-    # --- Ключ на пользователя ---
-    responsible_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-
-    # --- Ключ на локацию ---
-    location_id = Column(Integer, ForeignKey("locations.id"), nullable=True)
-
-    # --- Человеко-читаемое название локации ---
-    # location = Column(String, nullable=True)
-
-    # --- Relationships ---
     responsible = relationship("User", back_populates="inventory_items")
     location_obj = relationship("Location", back_populates="inventory_items")
+    status_obj = relationship("ItemStatus", back_populates="inventory_items")
 
 
 # === USERS ===

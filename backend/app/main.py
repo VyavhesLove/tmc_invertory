@@ -49,7 +49,7 @@ def on_startup():
     # Создадим дефолтного пользователя (admin:admin), если БД пуста
     db = SessionLocal()
     if not db.query(User).first():
-        user = User(username="admin", hashed_password=get_password_hash("admin"))
+        user = User(username="admin", hashed_password=hash_password("admin"))
         db.add(user)
         db.commit()
     db.close()
@@ -104,3 +104,8 @@ def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_c
 @app.get("/users/IsAdmin", response_model=schemas.UserIsAdmin)
 def get_is_admin(current_user: User = Depends(get_current_user)):
     return {"is_admin": current_user.is_admin}
+
+@app.get("/statuses", response_model=list[schemas.StatusOut])
+def list_statuses(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    statuses = db.query(models.ItemStatus).all()
+    return [{"id": stat.id, "status": stat.status} for stat in statuses]

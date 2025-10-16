@@ -1,6 +1,6 @@
 <template>
   <div class="main-content">
-    <h2>Создать по аналогии</h2>
+    <h2>Редактировать ТМЦ</h2>
     <form @submit.prevent="submitForm">
       <div>
         <label>Наименование:</label>
@@ -16,14 +16,13 @@
       </div>
       <div>
         <label>Статус:</label>
-        <select v-model="form.status">          
+        <select v-model="form.status">
           <option value="at_work">В работе</option>
           <option value="in_repair">В ремонте</option>
           <option value="issued">Выдано</option>
           <option value="available">Доступно</option>
           <option value="confirm">Подтвердить ТМЦ</option>
-          <option value="confirm_repair">Подтвердить ремонт</option>          
-          <!-- Добавь остальные статусы -->
+          <option value="confirm_repair">Подтвердить ремонт</option>
         </select>
       </div>
       <div>
@@ -44,7 +43,7 @@
           </option>
         </select>
       </div>
-      <button type="submit">Создать</button>
+      <button type="submit">Записать</button>
     </form>
     <p v-if="message">{{ message }}</p>
     <!-- Кнопка для выхода -->
@@ -54,8 +53,7 @@
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-//import axios from 'axios'
-import api from '@/api/axios' // или '../api/axios' я хз
+import api from '@/api/axios'
 
 const form = reactive({
   name: '',
@@ -70,6 +68,7 @@ const responsible_names = ref([])
 const locations = ref([])
 const message = ref('')
 const itemId = ref(null)
+
 const statusMap = {
   "В работе": "at_work",
   "В ремонте": "in_repair",
@@ -77,6 +76,21 @@ const statusMap = {
   "Доступно": "available",
   "Подтвердить ТМЦ": "confirm",
   "Подтвердить ремонт": "confirm_repair"
+}
+
+async function loadItem(id) {
+  try {
+    const { data } = await api.get(`/items/${id}`)
+    // Подставим данные формы с учетом новых полей
+    form.name = data.name
+    form.serial_number = data.serial_number
+    form.brand = data.brand
+    form.status = statusMap[data.status] || 'confirm'
+    form.responsible_id = data.responsible_id
+    form.location_id = data.location_id
+  } catch (e) {
+    message.value = 'Ошибка загрузки: ' + (e.response?.data?.detail || e.message)
+  }
 }
 
 async function loadLocations() {
@@ -97,42 +111,32 @@ async function loadResponsibleNames() {
   }
 }
 
-async function loadItem(id) {
-  try {
-    const { data } = await api.get(`/items/${id}`)
-    Object.assign(form, data)
-    form.status = statusMap[data.status] || 'confirm'
-  } catch (e) {
-    message.value = 'Ошибка загрузки: ' + (e.response?.data?.detail || e.message)
-  }
-}
-
 async function submitForm() {
   try {
-    const response = await api.post('/items/', form)
-    message.value = 'ТМЦ успешно создан: ID ' + response.data.id
-    // Можно очистить форму, если нужно
-    // Object.keys(form).forEach(key => form[key] = '')
+    if (!itemId.value) {
+      message.value = 'ID ТМЦ не найден.'
+      return
+    }
+    const { data } = await api.put(`/items/${itemId.value}`, form)
+    message.value = `ТМЦ обновлён: ID ${data.id}`
   } catch (e) {
-    message.value = 'Ошибка при создании: ' + (e.response?.data?.detail || e.message)
+    message.value = 'Ошибка при обновлении: ' + (e.response?.data?.detail || e.message)
   }
 }
 
-onMounted(() => {
+const back = () => {
+  window.location.href = 'http://localhost/' // можно заменить на router.push('/')
+}
+
+onMounted(async () => {
+  await loadLocations()
+  await loadResponsibleNames()
   const savedId = localStorage.getItem('selectedItemId')
   if (savedId) {
     itemId.value = savedId
     loadItem(savedId)
   }
-  loadLocations()
-  loadResponsibleNames()
 })
-
-// Функция возврата, редирект на http://localhost/
-function back() {
-  window.location.href = 'http://localhost/'
-}
-
 </script>
 
 <style scoped>

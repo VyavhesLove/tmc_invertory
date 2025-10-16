@@ -3,7 +3,7 @@
     <h2>Создать новый ТМЦ</h2>
     <form @submit.prevent="submitForm">
       <div>
-        <label>Название:</label>
+        <label>Наименование:</label>
         <input v-model="form.name" required />
       </div>
       <div>

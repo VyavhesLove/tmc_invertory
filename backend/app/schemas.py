@@ -16,11 +16,8 @@ class UserOut(UserBase):
     username: str
     model_config = ConfigDict(from_attributes=True)
 
-class UserIsAdmin(UserBase):
-    id: int
-    username: str
+class UserIsAdmin(BaseModel):
     is_admin: bool
-    model_config = ConfigDict(from_attributes=True)
 
 
 # === Inventory ===
@@ -49,6 +46,7 @@ class ItemOut(ItemBase):
 
     class Config:
         orm_mode = True
+        from_attributes = True
 
 # === Locations ===
 class LocationBase(BaseModel):

@@ -14,7 +14,7 @@
               <input v-if="showFilters.id" v-model="filters.id" placeholder="Фильтр..." style="width:70px" @input="resetPage" />
             </th>
             <th>
-              Название
+              Наименование
               <span @click="toggleFilter('name')" style="cursor:pointer">🔍</span>
               <input v-if="showFilters.name" v-model="filters.name" placeholder="Фильтр..." style="width:100px" @input="resetPage" />
             </th>

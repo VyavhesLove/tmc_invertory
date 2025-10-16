@@ -108,10 +108,10 @@ def create_item(item_in: schemas.ItemCreate, db: Session = Depends(get_db), curr
     Добавляет новый объект ТМЦ в базу данных.
     Проверяет, существует ли указанная локация и ответственный пользователь.
     """
-    if item_in.location_id:
-        location = db.query(models.Location).filter(models.Location.id == item_in.location_id).first()
-        if not location:
-            raise HTTPException(status_code=400, detail="Указанная локация не найдена")
+    # if item_in.location_id:
+    #     location = db.query(models.Location).filter(models.Location.id == item_in.location_id).first()
+    #     if not location:
+    #         raise HTTPException(status_code=400, detail="Указанная локация не найдена")
 
     if item_in.responsible_id:
         responsible = db.query(models.User).filter(models.User.id == item_in.responsible_id).first()

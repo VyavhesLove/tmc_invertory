@@ -2,52 +2,47 @@
   <div class="main-content">
     <h2>Редактировать ТМЦ</h2>
     <form @submit.prevent="submitForm">
+      <!-- Название -->
       <div>
-        <label>Название:</label>
+        <label>Наименование:</label>
         <input v-model="form.name" required />
       </div>
+
+      <!-- Серийный номер -->
       <div>
         <label>Серийный номер:</label>
         <input v-model="form.serial_number" />
       </div>
+
+      <!-- Бренд -->
       <div>
         <label>Бренд:</label>
         <input v-model="form.brand" />
       </div>
+
+      <!-- Нередактируемые поля -->
       <div>
         <label>Статус:</label>
-        <select v-model="form.status">
-          <option value="at_work">В работе</option>
-          <option value="in_repair">В ремонте</option>
-          <option value="issued">Выдано</option>
-          <option value="available">Доступно</option>
-          <option value="confirm">Подтвердить ТМЦ</option>
-          <option value="confirm_repair">Подтвердить ремонт</option>
-        </select>
+        <input :value="item.status" disabled />
       </div>
+
       <div>
         <label>Ответственный:</label>
-        <select v-model="form.responsible_id" required>
-          <option disabled value="">Выберите пользователя</option>
-          <option v-for="res in responsible_names" :key="res.id" :value="res.id">
-            {{ res.username }}
-          </option>
-        </select>
+        <input :value="item.responsible_name" disabled />
       </div>
+
       <div>
         <label>Локация:</label>
-        <select v-model="form.location_id" required>
-          <option disabled value="">Выберите локацию</option>
-          <option v-for="loc in locations" :key="loc.id" :value="loc.id">
-            {{ loc.location }}
-          </option>
-        </select>
+        <input :value="item.location_name" disabled />
       </div>
-      <button type="submit">Записать</button>
+
+      <button type="submit">💾 Сохранить изменения</button>
     </form>
+
     <p v-if="message">{{ message }}</p>
-    <!-- Кнопка для выхода -->
-    <button @click="back" class="logout-button mt-2">к списку ТМЦ</button>
+
+    <!-- Кнопка возврата -->
+    <button @click="back" class="logout-button mt-2">⬅ Вернуться к списку ТМЦ</button>
   </div>
 </template>
 
@@ -58,83 +53,65 @@ import api from '@/api/axios'
 const form = reactive({
   name: '',
   serial_number: '',
-  brand: '',
-  status: '',
-  responsible_id: null,
-  location_id: null
+  brand: ''
 })
 
-const responsible_names = ref([])
-const locations = ref([])
+const item = reactive({
+  status: '',
+  responsible_name: '',
+  location_name: ''
+})
+
 const message = ref('')
 const itemId = ref(null)
 
-const statusMap = {
-  "В работе": "at_work",
-  "В ремонте": "in_repair",
-  "Выдано": "issued",
-  "Доступно": "available",
-  "Подтвердить ТМЦ": "confirm",
-  "Подтвердить ремонт": "confirm_repair"
-}
-
+// Загрузка данных ТМЦ по ID
 async function loadItem(id) {
   try {
     const { data } = await api.get(`/items/${id}`)
-    // Подставим данные формы с учетом новых полей
     form.name = data.name
     form.serial_number = data.serial_number
     form.brand = data.brand
-    form.status = statusMap[data.status] || 'confirm'
-    form.responsible_id = data.responsible_id
-    form.location_id = data.location_id
+    item.status = data.status
+    item.responsible_name = data.responsible_name
+    item.location_name = data.location_name
   } catch (e) {
     message.value = 'Ошибка загрузки: ' + (e.response?.data?.detail || e.message)
   }
 }
 
-async function loadLocations() {
-  try {
-    const res = await api.get('/locations')
-    locations.value = res.data
-  } catch (e) {
-    message.value = 'Ошибка загрузки локаций: ' + (e.response?.data?.detail || e.message)
-  }
-}
-
-async function loadResponsibleNames() {
-  try {
-    const res = await api.get('/users')
-    responsible_names.value = res.data
-  } catch (e) {
-    message.value = 'Ошибка загрузки пользователей: ' + (e.response?.data?.detail || e.message)
-  }
-}
-
+// Отправка обновления
 async function submitForm() {
   try {
     if (!itemId.value) {
       message.value = 'ID ТМЦ не найден.'
       return
     }
-    const { data } = await api.put(`/items/${itemId.value}`, form)
-    message.value = `ТМЦ обновлён: ID ${data.id}`
+
+    const payload = {
+      name: form.name,
+      serial_number: form.serial_number,
+      brand: form.brand
+    }
+
+    const { data } = await api.put(`/items/${itemId.value}`, payload)
+    message.value = `✅ ТМЦ обновлён: ID ${data.id}`
   } catch (e) {
     message.value = 'Ошибка при обновлении: ' + (e.response?.data?.detail || e.message)
   }
 }
 
+// Возврат к списку
 const back = () => {
   window.location.href = 'http://localhost/' // можно заменить на router.push('/')
 }
 
+// При монтировании — загрузить данные
 onMounted(async () => {
-  await loadLocations()
-  await loadResponsibleNames()
   const savedId = localStorage.getItem('selectedItemId')
   if (savedId) {
     itemId.value = savedId
-    loadItem(savedId)
+    await loadItem(savedId)
   }
 })
 </script>
@@ -147,7 +124,7 @@ label {
   display: inline-block;
   width: 120px;
 }
-input, select {
+input {
   padding: 5px;
   width: 200px;
 }

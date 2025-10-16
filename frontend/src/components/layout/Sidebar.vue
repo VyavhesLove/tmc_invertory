@@ -97,7 +97,7 @@ const menuItems = [
   { label: 'Создать ТМЦ', icon: 'fas fa-plus', to: '/create-item' },
   { label: 'Создать по аналогии', icon: 'fas fa-copy', to: '/create-analog' },
   { label: 'Редактировать ТМЦ', icon: 'fas fa-pen', to: '/edit-item' },
-  { label: 'Передать ТМЦ', icon: 'fas fa-share' },
+  { label: 'Передать ТМЦ', icon: 'fas fa-share', to: '/transfer-item' },
   { label: 'В работу', icon: 'fas fa-hammer' },
   { label: 'Отправить в сервис', icon: 'fas fa-tools' },
   { label: 'Вернуть из сервиса', icon: 'fas fa-undo' },

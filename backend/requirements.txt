@@ -9,3 +9,4 @@ passlib[bcrypt]             # или passlib[argon2] если хотите argon
 python-multipart            # если формы multipart
 email-validator             # pydantic/email проверки
 python-dotenv               # удобство локально
+black                       # На будущее (добавить в CI\CD)

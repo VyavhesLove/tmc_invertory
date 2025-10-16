@@ -48,13 +48,19 @@ def list_items(
             .filter(models.Location.id == item.location_id)
             .scalar()
         )
+        status_name = (
+            db.query(models.ItemStatus.status)
+            .filter(models.ItemStatus.id == item.status_id)
+            .scalar()
+        )
 
         result.append({
             "id": item.id,
             "name": item.name,
             "serial_number": item.serial_number,
             "brand": item.brand,
-            # "status": item.status,
+            "status_id": item.status_id,
+            "status_name": status_name or "",
             "responsible_id": item.responsible_id,
             "responsible_name": responsible_name or "",
             "location_id": item.location_id,
@@ -83,12 +89,18 @@ def get_item(item_id: int, db: Session = Depends(get_db), current_user: User = D
         .filter(models.Location.id == item.location_id)
         .scalar()
     )
+    status_name = (
+        db.query(models.ItemStatus.status)
+        .filter(models.ItemStatus.id == item.status_id)
+        .scalar()
+    )
     return {
         "id": item.id,
         "name": item.name,
         "serial_number": item.serial_number,
         "brand": item.brand,
-        # "status": item.status,
+        "status_id": item.status_id,
+        "status": status_name,
         "responsible_id": item.responsible_id,
         "responsible_name": responsible_name,
         "location_id": item.location_id,

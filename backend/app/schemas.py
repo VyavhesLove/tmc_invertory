@@ -25,7 +25,7 @@ class ItemBase(BaseModel):
     name: str
     serial_number: Optional[str] = None
     brand: Optional[str] = None
-    status: Optional[str] = None
+    status_id: Optional[int] = None
     responsible_id: Optional[int] = None
     location_id: Optional[int] = None
     # comment: Optional[str] = None
@@ -43,6 +43,7 @@ class ItemOut(ItemBase):
     id: int
     location_name: Optional[str] = None
     responsible_name: Optional[str] = None
+    status_name: Optional[str] = None
 
     class Config:
         orm_mode = True

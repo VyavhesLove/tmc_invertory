@@ -19,7 +19,7 @@ class InventoryItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    serial_number = Column(String, unique=True, nullable=True)
+    serial_number = Column(String, nullable=True)
     brand = Column(String, nullable=True)
     status_id = Column(Integer, ForeignKey("item_status.id"))
     responsible_id = Column(Integer, ForeignKey("users.id"))

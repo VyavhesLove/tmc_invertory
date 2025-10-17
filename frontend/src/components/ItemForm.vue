@@ -9,10 +9,14 @@
         <input v-model="form.name" required />
       </div>
 
-      <div>
+        <div>
         <label>Серийный номер:</label>
-        <input v-model="form.serial_number" />
-      </div>
+        <input v-model="form.serial_number" :disabled="form.serial_missing" />
+        <div class="serial-missing-row reverse">
+            <input type="checkbox" v-model="form.serial_missing" id="serial_missing" />
+            <label for="serial_missing">Серийный номер отсутствует</label>
+        </div>
+        </div>
 
       <div>
         <label>Бренд:</label>
@@ -62,7 +66,8 @@ const form = reactive({
   brand: '',
   status: '',
   responsible_id: null,
-  location_id: null
+  location_id: null,
+  serial_missing: false
 })
 
 // дополнительные поля (для просмотра)
@@ -123,4 +128,22 @@ button {
 .mt-2 {
   margin-top: 10px;
 }
+
+.serial-missing-row.reverse {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  width: max-content;
+}
+
+.serial-missing-row.reverse label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.serial-missing-row.reverse input[type="checkbox"] {
+  order: 2;
+}
+
 </style>

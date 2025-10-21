@@ -2,7 +2,7 @@
   <div class="main-content">
     <h2>Редактировать ТМЦ</h2>
 
-    <form @submit.prevent="submitForm">
+    <form @submit.prevent="handleSubmit">
       <!-- Название -->
       <div>
         <label>Наименование:</label>
@@ -21,15 +21,12 @@
         <input v-model="form.brand" />
       </div>
 
-      <!-- Остальные поля — только для просмотра -->
+      <!-- Только просмотр -->
       <div>
         <label>Статус:</label>
-        <input
-          :value="item.status_name"
-          disabled
-        />
+        <input :value="item.status_name" disabled />
       </div>
-      
+
       <div>
         <label>Ответственный:</label>
         <input :value="item.responsible_name" disabled />
@@ -45,19 +42,18 @@
 
     <p v-if="message">{{ message }}</p>
 
-    <button @click="back" class="logout-button mt-2">⬅ Вернуться к списку ТМЦ</button>
+    <button @click="backToList" class="logout-button mt-2">⬅ Вернуться к списку ТМЦ</button>
   </div>
 </template>
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-import api from '@/api/axios'
+import { loadItem, submitForm, backToList, message, showError } from '@/utils/apiHelpers'
 
 const form = reactive({
   name: '',
   serial_number: '',
-  brand: '',
-  status_id: null
+  brand: ''
 })
 
 const item = reactive({
@@ -66,82 +62,33 @@ const item = reactive({
   status_name: ''
 })
 
-const statuses = ref([])     // ✅ список статусов
-const message = ref('')
 const itemId = ref(null)
 
-// -----------------------------
-// Загрузка всех статусов
-// -----------------------------
-async function loadStatuses() {
-  try {
-    const res = await api.get('/statuses')
-    statuses.value = res.data
-    console.log('📦 Загружены статусы:', statuses.value)
-  } catch (e) {
-    message.value = 'Ошибка загрузки статусов: ' + (e.response?.data?.detail || e.message)
-  }
+async function initForm(id) {
+  const data = await loadItem(id)
+  if (!data) return
+  form.name = data.name
+  form.serial_number = data.serial_number
+  form.brand = data.brand
+
+  item.status_name = data.status_name || data.status || '—'
+  item.responsible_name = data.responsible_name
+  item.location_name = data.location_name
 }
 
-// -----------------------------
-// Загрузка карточки ТМЦ
-// -----------------------------
-async function loadItem(id) {
-  try {
-    const { data } = await api.get(`/items/${id}`)
-    console.log('📦 Загружен ТМЦ:', data)
-
-    form.name = data.name
-    form.serial_number = data.serial_number
-    form.brand = data.brand
-    item.status_name = data.status_name || data.status || '—'
-    item.responsible_name = data.responsible_name
-    item.location_name = data.location_name
-  } catch (e) {
-    message.value = 'Ошибка загрузки: ' + (e.response?.data?.detail || e.message)
-  }
+async function handleSubmit() {
+  await submitForm(form, 'edit', itemId.value)
 }
 
-// -----------------------------
-// Сохранение изменений
-// -----------------------------
-async function submitForm() {
-  try {
-    if (!itemId.value) {
-      message.value = 'ID ТМЦ не найден.'
-      return
-    }
-
-    const payload = {
-      name: form.name,
-      serial_number: form.serial_number,
-      brand: form.brand,
-      status_id: form.status_id // ✅ теперь отправляем ID статуса
-    }
-
-    const { data } = await api.put(`/items/${itemId.value}`, payload)
-    message.value = `✅ ТМЦ обновлён: ID ${data.id}`
-  } catch (e) {
-    message.value = 'Ошибка при обновлении: ' + (e.response?.data?.detail || e.message)
-  }
-}
-
-// -----------------------------
-// Кнопка "Назад"
-// -----------------------------
-const back = () => {
-  window.location.href = 'http://localhost/'
-}
-
-// -----------------------------
-// Инициализация
-// -----------------------------
 onMounted(async () => {
-  await loadStatuses() // ✅ сначала статусы
   const savedId = localStorage.getItem('selectedItemId')
   if (savedId) {
     itemId.value = savedId
-    await loadItem(savedId)
+    await initForm(savedId)
+  } else {
+    message.value = 'ID ТМЦ не найден в localStorage'
+    showError('ID ТМЦ не найден в localStorage')
+    backToList()
   }
 })
 </script>

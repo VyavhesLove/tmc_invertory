@@ -77,10 +77,10 @@
       </table>
       <div style="margin-top:10px;">
         Кол-во на странице:
-        <select v-model.number="perPage">
+        <select v-model.number="perPage" style="margin-right: 16px;">
           <option v-for="n in [5,10,25,50,100]" :key="n" :value="n">{{ n }}</option>
         </select>
-        <button :disabled="page === 1" @click="prevPage">Назад</button>
+        <button class="btn-prev" :disabled="page === 1" @click="prevPage">Назад</button>
         Страница {{ page }} из {{ pageCount }}
         <button :disabled="page === pageCount" @click="nextPage">Вперёд</button>
       </div>
@@ -208,4 +208,9 @@ onMounted(async () => {
 .selected {
   background-color: #80c1ff;
 }
+
+.btn-prev {
+  margin-right: 8px;
+}
+
 </style>

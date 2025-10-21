@@ -214,3 +214,55 @@ button:hover {
 body, table, .sidebar, .main-content {
   transition: background-color 0.3s, color 0.3s, border-color 0.3s, margin-left 0.3s;
 }
+
+/* ============ TOAST ============ */
+.my-popup-toast {
+  /* убрали жёсткое позиционирование — библиотека сама разместит элемент в контейнере */
+  background-color: white;
+  border: 2px solid #007bff;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  padding: 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  color: #007bff;
+  /* Добавим анимацию всплытия */
+  animation: popupFadeIn 0.4s ease;
+  max-width: 360px;
+  word-break: break-word;
+  text-align: left;
+}
+
+/* Анимация */
+@keyframes popupFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Цвета по типам */
+.my-popup-toast.my-toast-success {
+  border-color: #28a745;
+  color: #28a745;
+}
+.my-popup-toast.my-toast-error {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+.my-popup-toast.my-toast-info {
+  border-color: #17a2b8;
+  color: #17a2b8;
+}
+.my-popup-toast.my-toast-warning {
+  border-color: #ffc107;
+  color: #856404;
+}
+
+.vue-toast-notification__container--top-center .my-popup-toast {
+  margin: 6px auto;
+  text-align: center;
+}

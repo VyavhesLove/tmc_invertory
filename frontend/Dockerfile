@@ -16,6 +16,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 # Сначала копируем только package*.json чтобы Docker-кэш работал
 COPY package*.json ./
 
+# Обновляем npm до актуальной версии
+RUN npm install -g npm@latest
+
 # Устанавливаем ВСЕ зависимости (включая devDeps!), потому что vite нужен для сборки
 RUN npm install --no-audit --no-fund
 

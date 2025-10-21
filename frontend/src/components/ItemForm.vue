@@ -44,20 +44,20 @@
 
     <p v-if="message">{{ message }}</p>
 
-    <button @click="back" class="logout-button mt-2">⬅ Вернуться к списку ТМЦ</button>
+    <button @click="backToList" class="logout-button mt-2">⬅ Вернуться к списку ТМЦ</button>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
 import {
   loadLocations, loadResponsibleNames, loadStatuses,
-  loadItem, submitForm, back, message
+  loadItem, submitForm, backToList, message, showError
 } from '@/utils/apiHelpers.js'
 
-// пропс для режима
+// 🔹 режим: new | analog | edit
 const props = defineProps({
-  mode: { type: String, default: 'new' } // 'new' | 'analog'
+  mode: { type: String, default: 'new' }
 })
 
 const form = reactive({
@@ -70,14 +70,27 @@ const form = reactive({
   serial_missing: false
 })
 
+// при включении чекбокса делаем serial_number null и дизейблим input
+watch(() => form.serial_missing, (newVal) => {
+  if (newVal) {
+    form.serial_number = null
+  } else {
+    // если пользователь снял флаг — установить пустую строку, чтобы удобнее редактировать
+    form.serial_number = ''
+  }
+})
+
 // дополнительные поля (для просмотра)
 const currentStatus = ref('')
 const currentResponsible = ref('')
 const currentLocation = ref('')
 
-const title = computed(() =>
-  props.mode === 'analog' ? 'Создать по аналогии' : 'Создать новый ТМЦ'
-)
+// заголовок страницы
+const title = computed(() => {
+  if (props.mode === 'analog') return 'Создать по аналогии'
+  if (props.mode === 'edit') return 'Редактировать ТМЦ'
+  return 'Создать новый ТМЦ'
+})
 
 onMounted(async () => {
   await Promise.all([
@@ -86,7 +99,7 @@ onMounted(async () => {
     loadStatuses()
   ])
 
-  if (props.mode === 'analog') {
+  if (props.mode === 'analog' || props.mode === 'edit') {
     const savedId = localStorage.getItem('selectedItemId')
     if (savedId) {
       const item = await loadItem(savedId)
@@ -106,7 +119,26 @@ onMounted(async () => {
 })
 
 async function handleSubmit() {
-  await submitForm(form)
+  // Валидация наименования
+  if (!form.name || !String(form.name).trim()) {
+    showError('Ошибка валидации', new Error('Заполните поле "Наименование"'))
+    return
+  }
+
+  // Валидация серийного номера
+  // учтём, что serial_number может быть null
+  const serialVal = form.serial_number ?? ''
+  if (!form.serial_missing && !String(serialVal).trim()) {
+    showError('Ошибка валидации', new Error('Заполните поле "Серийный номер" или отметьте чекбокс "Серийный номер отсутствует"'))
+    return
+  }
+
+  if (props.mode === 'edit') {
+    const savedId = localStorage.getItem('selectedItemId')
+    await submitForm(form, 'edit', savedId)
+  } else {
+    await submitForm(form, 'create')
+  }
 }
 </script>
 

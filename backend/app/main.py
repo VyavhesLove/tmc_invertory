@@ -8,6 +8,7 @@ from .deps import get_db
 from .database import engine, SessionLocal, Base
 from . import models
 from .models import User
+from .config import config
 from .auth import (
     authenticate_user,
     create_access_token,
@@ -60,7 +61,12 @@ def on_startup():
 
 @app.post("/auth/login", tags=["Auth"], summary="Авторизация и получение токена")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = authenticate_user(db, form_data.username, form_data.password)
+    # Если окружение dev и поля пустые, используем admin:admin
+    if config.ENVIRONMENT == "dev" and not form_data.username and not form_data.password:
+        user = authenticate_user(db, "admin", "admin")
+    else:
+        user = authenticate_user(db, form_data.username, form_data.password)
+
     if not user:
         raise HTTPException(status_code=400, detail="Неверное имя пользователя или пароль")
 

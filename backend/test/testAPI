@@ -1,0 +1,21 @@
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from fastapi.testclient import TestClient
+from app.main import app  # импорт вашего FastAPI приложения
+
+client = TestClient(app)
+
+response = client.post(
+    "/items/",
+    json={
+        "name": "Test Item",
+        "description": "Test description",
+        "responsible_id": 1,
+        "location_id": 2
+    }
+)
+
+print(response.status_code)
+print(response.json())

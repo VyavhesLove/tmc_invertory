@@ -2,3 +2,14 @@ db_password.txt
 jwt_secret.txt
 pepper.txt
 .env
+.gigaide/gigaide.properties
+.idea/dbnavigator.xml
+.gitignore
+.idea/misc.xml
+.gitignore
+.idea/modules.xml
+.idea/tmc_invertory.iml
+.idea/vcs.xml
+.idea/.gigateam/documenting.properties
+.idea/codeStyles/codeStyleConfig.xml
+.idea/codeStyles/Project.xml
